@@ -1,0 +1,14 @@
+import { IClue } from './IClue';
+import { TDirection } from '../Types/TDirection';
+
+export interface IWord {
+  get text(): string;
+  get clue(): IClue;
+  get row(): number;
+  get col(): number;
+  get direction(): TDirection;
+  get length(): number;
+  setCharAt(index: number, char: string): void;
+  copy(): IWord;
+  blankCopy(): IWord;
+}
