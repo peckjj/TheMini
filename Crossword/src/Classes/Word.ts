@@ -1,4 +1,4 @@
-import { IWord } from "../Interfaces/IWord";
+import { BLANK_CHAR, IWord } from "../Interfaces/IWord";
 import { CWIndexOutOfBoundsError } from "../Errors/CWIndexOutOfBoundsError";
 import { CWInvalidCharLengthError } from "../Errors/CWInvalidCharLengthError";
 import { CWInvalidCharTypeError } from "../Errors/CWInvalidCharTypeError";
@@ -6,7 +6,6 @@ import { IClue } from "../Interfaces/IClue";
 import { TDirection } from "../Types/TDirection";
 import { CWEmptyWordError } from "../Errors/CWEmptyWordError";
 
-const BLANK_CHAR = '_';
 
 export class Word implements IWord {
     private _text: string;

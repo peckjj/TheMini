@@ -11,4 +11,5 @@ export interface ICrosswordGame {
   intersectsWord(col: number, row: number): boolean;
   getClues(): IClue[];
   getWord(row: number, col: number, direction: TDirection): IWord | undefined;
+  getCharAt(row: number, col: number): string | undefined;
 }

@@ -1,6 +1,8 @@
 import { IClue } from './IClue';
 import { TDirection } from '../Types/TDirection';
 
+export const BLANK_CHAR = '_';
+
 export interface IWord {
   get id(): number;
   get text(): string;

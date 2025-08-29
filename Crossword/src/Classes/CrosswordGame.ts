@@ -61,4 +61,8 @@ export class CrosswordGame implements ICrosswordGame {
     getWord(row: number, col: number, direction: TDirection): IWord | undefined {
         return this.board.getWord(row, col, direction);
     }
+
+    getCharAt(row: number, col: number): string | undefined {
+        return this.board.getCharAt(row, col);
+    }
 }
