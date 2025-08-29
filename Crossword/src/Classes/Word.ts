@@ -15,18 +15,21 @@ export class Word implements IWord {
     private readonly _col: number;
     private readonly _direction: TDirection;
     private readonly _length: number;
+    private readonly _id: number;
 
     constructor(
+        id: number,
         text: string,
         clue: IClue,
         row: number,
         col: number,
-        direction: TDirection,
+        direction: TDirection
     ) {
         if (!text || text.length === 0) {
             throw new CWEmptyWordError();
         }
 
+        this._id = id;
         this._text = text;
         this._row = row;
         this._col = col;
@@ -37,6 +40,10 @@ export class Word implements IWord {
         const order = direction === "across" ? row : col;
         this._clue.direction = direction;
         this._clue.order = order;
+    }
+
+    get id(): number {
+        return this._id;
     }
 
     get text(): string {
@@ -76,6 +83,7 @@ export class Word implements IWord {
 
     copy(): IWord {
         return new Word(
+            this.id,
             this.text,
             this.clue,
             this.row,
@@ -86,6 +94,7 @@ export class Word implements IWord {
 
     blankCopy(): IWord {
         return new Word(
+            -1,
             BLANK_CHAR.repeat(this.length),
             this.clue,
             this.row,

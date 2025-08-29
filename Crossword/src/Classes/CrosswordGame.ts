@@ -1,5 +1,6 @@
 import { ICrosswordGame } from "../Interfaces/ICrosswordGame";
 import { ICrossword } from "../Interfaces/ICrossword";
+import { IClue } from "../Interfaces/IClue";
 
 export class CrosswordGame implements ICrosswordGame {
     private key: ICrossword;
@@ -23,27 +24,35 @@ export class CrosswordGame implements ICrosswordGame {
         return this._cols;
     }
 
-    setCharAt(x: number, y: number, char: string): void {
-        this.board.setCharAt(x, y, char);
+    setCharAt(row: number, col: number, char: string): void {
+        this.board.setCharAt(row, col, char);
     }
 
     isSolved(): boolean {
         return this.getIncorrectCharacters().length === 0;
     }
 
-    getIncorrectCharacters(): Array<{ x: number; y: number; }> {
-        const incorrect: Array<{ x: number; y: number; }> = [];
-        for (let x = 0; x < this.board.cols; x++) {
-            for (let y = 0; y < this.board.rows; y++) {
-                if (this.board.intersectsWord(x, y)) {
-                    const boardChar = (this.board as any).getCharAt(x, y);
-                    const keyChar = (this.key as any).getCharAt(x, y);
+    getIncorrectCharacters(): Array<{ row: number; col: number; }> {
+        const incorrect: Array<{ row: number; col: number; }> = [];
+        for (let row = 0; row < this.board.rows; row++) {
+            for (let col = 0; col < this.board.cols; col++) {
+                if (this.board.intersectsWord(row, col)) {
+                    const boardChar = (this.board as any).getCharAt(row, col);
+                    const keyChar = (this.key as any).getCharAt(row, col);
                     if (boardChar !== keyChar) {
-                        incorrect.push({ x, y });
+                        incorrect.push({ row, col });
                     }
                 }
             }
         }
         return incorrect;
+    }
+
+    intersectsWord(row: number, col: number): boolean {
+        return this.board.intersectsWord(row, col);
+    }
+
+    getClues(): IClue[] {
+        return this.key.getClues();
     }
 }

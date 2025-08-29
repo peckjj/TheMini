@@ -6,7 +6,7 @@ export interface ICrossword {
   getClues(): IClue[];
   createBlankCopy(): ICrossword;
   createFullCopy(): ICrossword;
-  intersectsWord(x: number, y: number): boolean;
-  setCharAt(x: number, y: number, char: string): void;
-  getCharAt(x: number, y: number): string | undefined;
+  intersectsWord(col: number, row: number): boolean;
+  setCharAt(col: number, row: number, char: string): void;
+  getCharAt(col: number, row: number): string | undefined;
 }

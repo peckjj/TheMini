@@ -7,7 +7,7 @@ import { CWInvalidWordOverlapError } from '../src/Errors/CWInvalidWordOverlapErr
 
 function makeWord(text: string, clueText: string, row: number, col: number, direction: TDirection) {
     const clue = new Clue(clueText, direction, direction === 'across' ? row : col);
-    return new Word(text, clue, row, col, direction);
+    return new Word(-1, text, clue, row, col, direction);
 }
 
 describe('Crossword', () => {
@@ -52,13 +52,20 @@ describe('Crossword', () => {
     });
 
     it('should create a Crossword with correct properties (3 words across, 3 words down)', () => {
+        /*
+          0 1 2 3 4 5
+        0 d o g   b
+        1 W o m b a t
+        2 a n t   t
+        3     a
+        */
         const words = [
             makeWord('dog', 'Canine', 0, 0, 'down'),
             makeWord('Wombat', 'What is a wombat?', 0, 1, 'down'),
             makeWord('ant', 'Insect', 0, 2, 'down'),
-            makeWord('cat', 'Feline', 1, 0, 'across'),
-            makeWord('fish', 'Aquatic animal', 2, 0, 'across'),
-            makeWord('bat', 'Nocturnal animal', 3, 0, 'across')
+            makeWord('oon', 'Feline', 1, 0, 'across'),
+            makeWord('gmta', 'Aquatic animal', 2, 0, 'across'),
+            makeWord('bat', 'Nocturnal animal', 4, 0, 'across')
         ];
         const crossword = new Crossword(words);
         expect(crossword.rows).toBe(6);
@@ -69,16 +76,16 @@ describe('Crossword', () => {
     it('should set and get a character at a cell for across word', () => {
         const words = [makeWord('cat', 'Feline', 0, 0, 'across')];
         const crossword = new Crossword(words);
-        crossword.setCharAt(1, 0, 'x');
-        expect(crossword.getCharAt(1, 0)).toBe('x');
+        crossword.setCharAt(0, 1, 'x');
+        expect(crossword.getCharAt(0, 1)).toBe('x');
         expect(words[0]?.text).toBe('cxt');
     });
 
     it('should set and get a character at a cell for down word', () => {
         const words = [makeWord('dog', 'Canine', 0, 0, 'down')];
         const crossword = new Crossword(words);
-        crossword.setCharAt(0, 1, 'x');
-        expect(crossword.getCharAt(0, 1)).toBe('x');
+        crossword.setCharAt(1, 0, 'x');
+        expect(crossword.getCharAt(1, 0)).toBe('x');
         expect(words[0]?.text).toBe('dxg');
     });
 
@@ -89,15 +96,20 @@ describe('Crossword', () => {
     });
 
     it('should detect intersection for across and down words', () => {
+        /*
+        c a t
+          o
+          g
+        */
         const words = [
             makeWord('cat', 'Feline', 0, 0, 'across'),
-            makeWord('dog', 'Canine', 0, 1, 'down')
+            makeWord('aog', 'Canine', 0, 1, 'down')
         ];
         const crossword = new Crossword(words);
-        expect(crossword.intersectsWord(1, 0)).toBe(true); // across
+        expect(crossword.intersectsWord(0, 1)).toBe(true); // across
         expect(crossword.intersectsWord(1, 1)).toBe(true); // down
         expect(crossword.intersectsWord(2, 2)).toBe(false);
-        expect(crossword.intersectsWord(0, 1)).toBe(false);
+        expect(crossword.intersectsWord(1, 0)).toBe(false);
     });
 
     it('should create blank and full copies', () => {

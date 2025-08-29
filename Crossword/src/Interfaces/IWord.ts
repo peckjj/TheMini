@@ -2,6 +2,7 @@ import { IClue } from './IClue';
 import { TDirection } from '../Types/TDirection';
 
 export interface IWord {
+  get id(): number;
   get text(): string;
   get clue(): IClue;
   get row(): number;

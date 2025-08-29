@@ -1,11 +1,57 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+// ...existing code...
+import ClueRegion from './components/ClueRegion.vue'
+import CrosswordRegion from './components/CrosswordRegion.vue'
+import { CrosswordGeneration } from '../../Crossword/src/Utils/CrosswordGeneration';
+
+let crosswordGame = CrosswordGeneration.SampleCrossword();
+</script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <div class="main-bg">
+    <div class="regions-container">
+      <div class="region region-crossword">
+        <CrosswordRegion :crosswordGame="crosswordGame" />
+      </div>
+      <div class="region region-clues">
+        <ClueRegion />
+      </div>
+    </div>
+  </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.main-bg {
+  min-height: 100vh;
+  min-width: 100vw;
+  height: 100vh;
+  width: 100vw;
+  background: linear-gradient(135deg, #232526 0%, #414345 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.regions-container {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  width: 95vw;
+  height: 95vh;
+}
+
+.region {
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.region-crossword {
+  flex: 2;
+}
+.region-clues {
+  flex: 1;
+}
+</style>
