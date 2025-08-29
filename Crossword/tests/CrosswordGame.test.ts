@@ -59,4 +59,27 @@ describe('CrosswordGame', () => {
             ])
         );
     });
+
+    it('should get the word given a set of coordinates and direction', () => {
+        let word = game.getWord(0, 0, 'across');
+        expect(word).toBeDefined();
+        expect(word!.text).toEqual('___');
+        expect(word!.direction).toBe('across');
+        word = game.getWord(0, 0, 'down');
+        expect(word).toBeDefined();
+        expect(word!.text).toEqual('___');
+        expect(word!.direction).toBe('down');
+        word = game.getWord(0, 1, 'across');
+        expect(word).toBeDefined();
+        expect(word!.text).toEqual('___');
+        expect(word!.direction).toBe('across');
+        word = game.getWord(1, 0, 'down');
+        expect(word).toBeDefined();
+        expect(word!.text).toEqual('___');
+        expect(word!.direction).toBe('down');
+        word = game.getWord(1, 1, 'across');
+        expect(word).toBeUndefined();
+        word = game.getWord(1, 1, 'down');
+        expect(word).toBeUndefined();
+    });
 });

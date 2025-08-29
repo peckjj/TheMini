@@ -12,7 +12,8 @@
           <div
             class="crossword-cell"
             :class="{
-              selected: isCellInSelectedWord(row - 1, col - 1)
+              selected: isCellInSelectedWord(row - 1, col - 1),
+              current: selectedCell?.row === row - 1 && selectedCell?.col === col - 1
             }"
             :style="{ background: crosswordGame.intersectsWord(row - 1, col - 1) ? '#fff' : '#000' }"
             @click="handleCellClick(row - 1, col - 1)"
@@ -38,9 +39,9 @@ function isCellInSelectedWord(row: number, col: number): boolean {
   const word = props.crosswordGame.getWord(selectedCell.value.row, selectedCell.value.col, selectedDirection.value);
   if (!word) return false;
   if (word.direction === 'across') {
-    return row === word.row && col >= word.col && col < word.col + word.length;
+    return row === word.row && col >= word.col && col < word.col + word.text.length;
   } else if (word.direction === 'down') {
-    return col === word.col && row >= word.row && row < word.row + word.length;
+    return col === word.col && row >= word.row && row < word.row + word.text.length;
   }
   return false;
 }
@@ -67,20 +68,20 @@ function handleCellClick(row: number, col: number) {
     return;
   }
 
+  let targetDirection = isCellInSelectedWord(row, col) ? flipDirection(selectedDirection.value) : selectedDirection.value;
+
   // 3. If cell is in selected word, switch direction
-  const currentWord = props.crosswordGame.getWord(selectedCell.value.row, selectedCell.value.col, selectedDirection.value);
-  if (!currentWord) return;
-  if (
-    (currentWord.direction === 'across' && row === currentWord.row && col >= currentWord.col && col < currentWord.col + currentWord.length) ||
-    (currentWord.direction === 'down' && col === currentWord.col && row >= currentWord.row && row < currentWord.row + currentWord.length)
-  ) {
-    const newDirection = selectedDirection.value === 'across' ? 'down' : 'across';
-    const newWord = props.crosswordGame.getWord(row, col, newDirection);
-    if (newWord) {
-      selectedCell.value = { row, col };
-      selectedDirection.value = newDirection;
-    }
+  if (props.crosswordGame.getWord(row, col, targetDirection)) {
+    selectedDirection.value = targetDirection;
+    selectedCell.value = { row, col };
+  } else if (props.crosswordGame.getWord(row, col, flipDirection(targetDirection))) {
+    selectedDirection.value = flipDirection(targetDirection);
+    selectedCell.value = { row, col };
   }
+}
+
+function flipDirection(direction: TDirection): TDirection {
+  return direction === 'across' ? 'down' : 'across';
 }
 </script>
 
@@ -107,6 +108,11 @@ function handleCellClick(row: number, col: number) {
   width: 100%;
   height: 100%;
   transition: background 0.2s;
+}
+
+.crossword-cell.current {
+  box-shadow: 0 0 0 3px #ffd700 inset;
+  z-index: 1;
 }
 
 .crossword-cell.selected {

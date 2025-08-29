@@ -68,4 +68,11 @@ describe('Word', () => {
         expect(word.text).toBe('apple');
         expect(copy.text).toBe('bpple');
     });
+
+    it('should return text with correct length', () => {
+        const word = new Word(-1, 'apple', clue, 0, 0, 'across');
+        expect(word.text.length).toBe(5);
+        expect(word.blankCopy().text).toBe('_____');
+        expect(word.blankCopy().text.length).toBe(5);
+    });
 });
