@@ -5,6 +5,7 @@ import { IClue } from '../Interfaces/IClue';
 import { CWInvalidDimsError } from '../Errors/CWInvalidDimsError';
 import { CWIndexOutOfBoundsError } from '../Errors/CWIndexOutOfBoundsError';
 import { CWInvalidWordOverlapError } from '../Errors/CWInvalidWordOverlapError';
+import { TDirection } from '../Types/TDirection';
 
 export class Crossword implements ICrossword {
     private _words: IWord[];
@@ -136,5 +137,19 @@ export class Crossword implements ICrossword {
         // Use copy method of IWord
         const fullWords = this._words.map(word => word.copy());
         return new Crossword(fullWords);
+    }
+
+    getWord(row: number, col: number, direction: TDirection): IWord | undefined {
+        // The row and col do not have to be at the beginning of the word.
+        return this._words.find(word => {
+            if (word.direction === direction) {
+                if (direction === 'across') {
+                    return word.row === row && col >= word.col && col < word.col + word.length;
+                } else {
+                    return word.col === col && row >= word.row && row < word.row + word.length;
+                }
+            }
+            return false;
+        });
     }
 }

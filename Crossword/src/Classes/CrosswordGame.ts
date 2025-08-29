@@ -1,6 +1,8 @@
 import { ICrosswordGame } from "../Interfaces/ICrosswordGame";
 import { ICrossword } from "../Interfaces/ICrossword";
 import { IClue } from "../Interfaces/IClue";
+import { IWord } from "../Interfaces/IWord";
+import { TDirection } from "../Types/TDirection";
 
 export class CrosswordGame implements ICrosswordGame {
     private key: ICrossword;
@@ -54,5 +56,9 @@ export class CrosswordGame implements ICrosswordGame {
 
     getClues(): IClue[] {
         return this.key.getClues();
+    }
+
+    getWord(row: number, col: number, direction: TDirection): IWord | undefined {
+        return this.board.getWord(row, col, direction);
     }
 }

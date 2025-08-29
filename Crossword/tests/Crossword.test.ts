@@ -130,4 +130,15 @@ describe('Crossword', () => {
         ];
         expect(() => new Crossword(words)).toThrow(CWInvalidWordOverlapError);
     });
+
+    it('should get a word by index and direction', () => {
+        const words = [
+            makeWord('cat', 'Feline', 1, 0, 'across'),
+            makeWord('bat', 'Nocturnal animal', 0, 1, 'down')
+        ];
+        const crossword = new Crossword(words);
+        expect(crossword.getWord(1, 1, 'across')).toEqual(words[0]);
+        expect(crossword.getWord(1, 1, 'down')).toEqual(words[1]);
+        expect(crossword.getWord(0, 0, 'across')).toBeUndefined();
+    });
 });

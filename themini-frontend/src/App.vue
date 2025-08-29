@@ -14,7 +14,7 @@ let crosswordGame = CrosswordGeneration.SampleCrossword();
         <CrosswordRegion :crosswordGame="crosswordGame" />
       </div>
       <div class="region region-clues">
-        <ClueRegion />
+        <ClueRegion :clues="crosswordGame.getClues()" />
       </div>
     </div>
   </div>
