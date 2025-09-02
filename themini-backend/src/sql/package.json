@@ -1,19 +1,14 @@
 {
-  "name": "themini-backend",
+  "name": "themini-sql",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "author": "Joshua Peck",
   "license": "ISC",
-  "dependencies": {
-    "express": "^5.1.0",
-    "sqlite3": "^5.1.7"
-  },
   "description": "",
-  "devDependencies": {
-    "@types/sqlite3": "^3.1.11"
+  "dependencies": {
+    "sqlite3": "^5.1.7"
   }
 }

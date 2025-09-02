@@ -2,10 +2,18 @@ const express = require("express");
 const routes = require("./routes");
 
 const path = require("path");
+import { DictionaryRepo } from "./DictionaryRepo.js";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const repo = new DictionaryRepo('./sql/themini.db', false);
+
+repo.getRandomWords(10).then(words => {
+    console.log(words);
+});
+
+/*
 app.use(express.json());
 app.use("/api", routes);
 
@@ -24,3 +32,4 @@ app.get("*", (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+*/
