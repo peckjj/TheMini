@@ -1,8 +1,7 @@
-import type { ICrossword } from "../../../Crossword/dist/Interfaces/ICrossword.js";
 import { DictionaryRepo } from "./DictionaryRepo.js";
 
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz_';
-const MAX_BLANKS_RATIO = 0.50; // Maximum ratio of blanks to letters in a word
+let MAX_BLANKS_RATIO = 0.50; // Maximum ratio of blanks to letters in a word
 const MAX_WORD_LENGTH = 5;
 
 export class CrosswordGen {
@@ -29,65 +28,87 @@ export class CrosswordGen {
             return false;
         }
 
-        // check every row to see if it's a valid word
+        // // check every row to see if it's a valid word
+        // for (let y = 0; y < gridY; y++) {
+        //     const rowPattern = grid[y]?.join('').split('_').at(-1);
+        //     if (rowPattern) {
+        //         // If the part is only underscores or empty, skip it
+        //         if (!/[a-z]/.test(rowPattern)) {
+        //             continue;
+        //         }
+
+        //         // if the rowPattern is only a single letter, it is wrapped in underscores and/or grid edges
+        //         // This should be valid, so skip it
+        //         if (rowPattern.length === 1) {
+        //             continue;
+        //         }
+
+        //         const exists = await repo.wordExists(rowPattern.replace(/\s+$/, '%'), rowPattern.length);
+        //         if (!exists) {
+        //             // console.log(`Row ${y} with pattern ${rowPattern} does not exist`);
+        //             return false;
+        //         }
+        //     } else {
+        //         //throw new Error("Row is undefined");
+        //     }
+        // }
+
+        // // Check every column to see if it's a valid word
+        // for (let x = 0; x < gridX; x++) {
+        //     let colPattern = grid.map(row => row[x]).join('').split('_').at(-1);
+        //     if (colPattern) {
+        //         if (!/[a-z]/.test(colPattern)) {
+        //             continue;
+        //         }
+
+        //         if (colPattern.length === 1) {
+        //             continue;
+        //         }
+
+        //         const exists = await repo.wordExists(colPattern.replace(/\s+$/, '%'), colPattern.length);
+        //         if (!exists) {
+        //             // console.log(`Column ${x} with pattern ${colPattern} does not exist`);
+        //             return false;
+        //         }
+        //     } else {
+        //         //throw new Error("Column is undefined");
+        //     }
+        // }
+
+        // Check for duplicated words in rows and columns
+        const foundWords = new Set<string>();
         for (let y = 0; y < gridY; y++) {
-            const rowPattern = grid[y]?.join('').split('_');
-            if (rowPattern) {
-                for (const part of rowPattern) {
-                    // If the part is only underscores or empty, skip it
-                    if (!/[a-z]/.test(part)) {
-                        continue;
-                    }
+            const rowWords = grid[y]!.join('').split('_').filter(w => w.length > 1);
+            for (let w of rowWords) {
+                if (w.endsWith(' ')) continue;
 
-                    // if the part is only a single letter, it is wrapped in underscores and/or grid edges
-                    // This should be valid, so skip it
-                    if (part.length === 1) {
-                        continue;
-                    }
-
-                    const exists = await repo.wordExists(part.replace(/\s+$/, '%'), part.length);
-                    if (!exists) {
-                        // console.log(`Row ${y} with pattern ${part} does not exist`);
-                        return false;
-                    }
+                if (foundWords.has(w)) {
+                    return false;
                 }
-            } else {
-                throw new Error("Row is undefined");
+                foundWords.add(w);
             }
         }
 
-        // Check every column to see if it's a valid word
         for (let x = 0; x < gridX; x++) {
-            let colPattern = grid.map(row => row[x]).join('').split('_');
-            if (colPattern) {
-                for (let part of colPattern) {
-                    if (!/[a-z]/.test(part)) {
-                        continue;
-                    }
+            const colWords = grid.map(row => row[x]).join('').split('_').filter(w => w.length > 1);
+            for (let w of colWords) {
+                if (w.endsWith(' ')) continue;
 
-                    if (part.length === 1) {
-                        continue;
-                    }
-
-                    const exists = await repo.wordExists(part.replace(/\s+$/, '%'), part.length);
-                    if (!exists) {
-                        // console.log(`Column ${x} with pattern ${part} does not exist`);
-                        return false;
-                    }
+                if (foundWords.has(w)) {
+                    return false;
                 }
-            } else {
-                throw new Error("Column is undefined");
+                foundWords.add(w);
             }
         }
 
         for (let y = 0; y < gridY; y++) {
             for (let x = 0; x < gridX; x++) {
                 // check surrounding area of every cell. If it is marooned by underscores or edges, return false
-                if (
-                    (!(grid[y-1]) || grid[y-1]![x] === '_') &&
-                    (!(grid[y+1]) || grid[y+1]![x] === '_') &&
-                    (!(grid[y]![x-1]) || grid[y]![x-1] === '_') &&
-                    (!(grid[y]![x+1]) || grid[y]![x+1] === '_')
+                if ((/[a-zA-Z]/.test(grid[y]![x]!)) &&
+                    (!(grid[y - 1]) || grid[y - 1]![x] === '_') &&
+                    (!(grid[y + 1]) || grid[y + 1]![x] === '_') &&
+                    (!(grid[y]![x - 1]) || grid[y]![x - 1] === '_') &&
+                    (!(grid[y]![x + 1]) || grid[y]![x + 1] === '_')
                 ) {
                     return false;
                 }
@@ -97,27 +118,59 @@ export class CrosswordGen {
         return true;
     }
 
-    static async generate(gridX = 5, gridY = 5): Promise<string[][]> {
+    static async generate(gridX = 5, gridY = 5, MAX_BLANKS_RATIO_PARAM = 0.50, timeLimitSeconds = 15): Promise<string[][]> {
+        const timeLimitMs = Math.floor(timeLimitSeconds * 1000);
+
+        const startTime = Date.now();
+        let curTime = startTime;
+
+        MAX_BLANKS_RATIO = MAX_BLANKS_RATIO_PARAM;
         const repo = new DictionaryRepo('./sql/themini.db', false);
 
-        const grid: string[][] = Array.from({ length: gridY }, () => Array(gridX).fill(' '));
-        const charSetMap: Record<string, string> = {};
-
+        let grid: string[][] = Array.from({ length: gridY }, () => Array(gridX).fill(' '));
+        let charSetMap: Record<string, string> = {};
 
         for (let y = 0; y < gridY; y++) {
             for (let x = 0; x < gridX; x++) {
+                if (Date.now() - curTime > timeLimitMs) {
+                    console.log("Time limit exceeded, restarting...");
+                    y = -1;
+                    x = -1;
+                    grid = Array.from({ length: gridY }, () => Array(gridX).fill(' '));
+                    charSetMap = {};
+                    curTime = Date.now();
+                    break;
+                }
+
+                const curRowStr = grid[y]?.slice(0, x).join('').split("_").at(-1);
+                const curColStr = grid.map(row => row[x]).slice(0, y).join('').split("_").at(-1);
+
                 if (charSetMap[`${x},${y}`] === undefined) {
-                    charSetMap[`${x},${y}`] = ALPHABET + '';
+                    const rowCharset = await repo.getCharsetForPrefix(curRowStr || '', Math.min(MAX_WORD_LENGTH - curRowStr!.length, gridX - x));
+                    const colCharset = await repo.getCharsetForPrefix(curColStr || '', Math.min(MAX_WORD_LENGTH - curColStr!.length, gridY - y));
+                    // if (y == gridY - 1) {
+                    //     charSetMap[`${x},${y}`] = Array.from(rowCharset).join('');
+                    // } else if (x == gridX - 1) {
+                    //     charSetMap[`${x},${y}`] = Array.from(colCharset).join('');
+                    // } else {
+                    // Get the intersection of the two sets
+                    let chars = Array.from(rowCharset.intersection(colCharset)).join('');
+                    if (curRowStr!.length == MAX_WORD_LENGTH || curColStr!.length == MAX_WORD_LENGTH) {
+                        chars = "_";
+                    }
+                    charSetMap[`${x},${y}`] = chars;
+                    // }
+
                 }
                 let charSet = charSetMap[`${x},${y}`];
-                const curRowStr = grid[y]?.slice(0, x + 1).join('').split("_").at(-1);
-                const curColStr = grid.map(row => row[x]).slice(0, y + 1).join('').split("_").at(-1);
 
-                if (curRowStr!.length == MAX_WORD_LENGTH + 1 || curColStr!.length == MAX_WORD_LENGTH + 1) {
-                    charSet = "_";
-                }
 
                 if (!charSet || charSet.length === 0) {
+                    // for (let row of grid) {
+                    //     console.log("Dead end:");
+                    //     console.log('\t' + row.join(''));
+                    // }
+                    // console.log('---');
                     delete charSetMap[`${x},${y}`];
                     grid[y]![x] = ' ';
                     x -= 2;
@@ -135,16 +188,24 @@ export class CrosswordGen {
                 charSet = charSet!.replace(randomChar, ''); // Remove this char from possible choices
                 charSetMap[`${x},${y}`] = charSet;
                 if (!(await this.validGrid(grid, repo))) {
+                    // await this.validGrid(grid, repo);
                     x--; // Retry this position
                 } else {
-                    for (let row of grid) {
-                        console.log(row.join(''));
-                    }
-                    console.log('---');
+                    // console.clear();
+                    // for (let row of grid) {
+                    //     console.log(row.join(''));
+                    // }
+                    // console.log('---');
                     continue;
                 }
             }
         }
+
+        const totalTime = Date.now() - startTime;
+        const hours = Math.floor(totalTime / 3600000);
+        const minutes = Math.floor((totalTime % 3600000) / 60000);
+        const seconds = Math.floor((totalTime % 60000) / 1000);
+        console.log(`Generated ${gridX}x${gridY} grid in ${hours} hrs ${minutes} mins ${seconds} secs`);
 
         return grid;
     }

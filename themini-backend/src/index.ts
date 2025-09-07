@@ -3,9 +3,9 @@ import { DictionaryRepo } from "./Classes/DictionaryRepo.js";
 
 const repo = new DictionaryRepo('./sql/themini.db', false);
 
-const grid = await CrosswordGen.generate(7, 7);
+const grid = await CrosswordGen.generate(6, 6, 0.33, 5);
 for (let row of grid) {
-    console.log(row.join(''));
+    console.log(row.join(' '));
 }
 
 // import express, { Request, Response, NextFunction } from 'express';

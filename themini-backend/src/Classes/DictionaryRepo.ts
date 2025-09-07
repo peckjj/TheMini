@@ -25,6 +25,16 @@ export class DictionaryRepo implements IDictionaryRepo {
         );
     }
 
+    private isCharsetRow(row: unknown): row is { prefix: string; charset: string } {
+        return (
+            row != null &&
+            "prefix" in (row as any) &&
+            "charset" in (row as any) &&
+            typeof (row as any).prefix === "string" &&
+            typeof (row as any).charset === "string"
+        );
+    }
+
     private getDbConnection(): Promise<DatabaseType> {
         if (this.db) {
             return Promise.resolve(this.db);
@@ -161,6 +171,65 @@ export class DictionaryRepo implements IDictionaryRepo {
             });
 
             return exists;
+        } catch (err) {
+            if (err instanceof CWDataError) {
+                throw err;
+            } else {
+                throw new CWDataError('Database error: ' + (err as Error).message);
+            }
+        }
+    }
+
+    async getCharsetForPrefix(prefix: string, remainingSize: number): Promise<Set<string>> {
+        const db = await this.getDbConnection();
+        try {
+            const sql = 'SELECT charset FROM "charsets" WHERE prefix = ? AND "remaining-space" = ? LIMIT 1';
+            const row = await new Promise<{ charset: string } | undefined>((res, rej) => {
+                db.get(sql, [prefix, remainingSize], (err, row) => {
+                    if (err) {
+                        rej(err);
+                    } else {
+                        res(row as { charset: string } | undefined);
+                    }
+                });
+            });
+            const ret = new Set<string>();
+            for (let c of (row?.charset || '')) {
+                ret.add(c);
+            }
+            return ret;
+        } catch (err) {
+            if (err instanceof CWDataError) {
+                throw err;
+            } else {
+                throw new CWDataError('Database error: ' + (err as Error).message);
+            }
+        }
+    }
+
+    async getCharsetPrefixMap(): Promise<Record<string, Set<string>>> {
+        const db = await this.getDbConnection();
+        try {
+            const sql = 'SELECT prefix, charset FROM "charsets"';
+            const ret = await new Promise<Record<string, Set<string>>>((res, rej) => {
+                db.all(sql, [], (err, rows) => {
+                    if (err) {
+                        rej(err);
+                    } else {
+                        const map: Record<string, Set<string>> = {};
+                        for (const row of rows) {
+                            if (!this.isCharsetRow(row)) {
+                                rej(new CWDataError('Invalid charset row: ' + JSON.stringify(row)));
+                                return;
+                            }
+                            map[row.prefix] = new Set<string>(row.charset.split(''));
+                        }
+                        res(map);
+                    }
+                });
+            });
+
+            return ret;
         } catch (err) {
             if (err instanceof CWDataError) {
                 throw err;
