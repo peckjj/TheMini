@@ -118,7 +118,7 @@ export class CrosswordGen {
         return true;
     }
 
-    static async generate(gridX = 5, gridY = 5, MAX_BLANKS_RATIO_PARAM = 0.50, timeLimitSeconds = 15): Promise<string[][]> {
+    static async generate(gridX = 5, gridY = 5, MAX_BLANKS_RATIO_PARAM = 0.50, timeLimitSeconds = 15, printProgress = false): Promise<string[][]> {
         const timeLimitMs = Math.floor(timeLimitSeconds * 1000);
 
         const startTime = Date.now();
@@ -132,7 +132,7 @@ export class CrosswordGen {
 
         for (let y = 0; y < gridY; y++) {
             for (let x = 0; x < gridX; x++) {
-                if (Date.now() - curTime > timeLimitMs) {
+                if (timeLimitSeconds > 0 && Date.now() - curTime > timeLimitMs) {
                     console.log("Time limit exceeded, restarting...");
                     y = -1;
                     x = -1;
@@ -191,11 +191,13 @@ export class CrosswordGen {
                     // await this.validGrid(grid, repo);
                     x--; // Retry this position
                 } else {
-                    // console.clear();
-                    // for (let row of grid) {
-                    //     console.log(row.join(''));
-                    // }
-                    // console.log('---');
+                    if (printProgress) {
+                        console.clear();
+                        for (let row of grid) {
+                            console.log(row.join(' '));
+                        }
+                        console.log('---');
+                    }
                     continue;
                 }
             }
