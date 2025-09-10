@@ -5,4 +5,5 @@ export interface IDictionaryRepo {
   wordExists(pattern: string, maxLength?: number): Promise<boolean>;
   getCharsetForPrefix(prefix: string, remainingSize: number): Promise<Set<string>>;
   getCharsetPrefixMap(): Promise<Record<string, Set<string>>>;
+  createAndInsertCrossword(grid: string[][], crosswordName: string): Promise<number>;
 }

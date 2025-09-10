@@ -28,53 +28,6 @@ export class CrosswordGen {
             return false;
         }
 
-        // // check every row to see if it's a valid word
-        // for (let y = 0; y < gridY; y++) {
-        //     const rowPattern = grid[y]?.join('').split('_').at(-1);
-        //     if (rowPattern) {
-        //         // If the part is only underscores or empty, skip it
-        //         if (!/[a-z]/.test(rowPattern)) {
-        //             continue;
-        //         }
-
-        //         // if the rowPattern is only a single letter, it is wrapped in underscores and/or grid edges
-        //         // This should be valid, so skip it
-        //         if (rowPattern.length === 1) {
-        //             continue;
-        //         }
-
-        //         const exists = await repo.wordExists(rowPattern.replace(/\s+$/, '%'), rowPattern.length);
-        //         if (!exists) {
-        //             // console.log(`Row ${y} with pattern ${rowPattern} does not exist`);
-        //             return false;
-        //         }
-        //     } else {
-        //         //throw new Error("Row is undefined");
-        //     }
-        // }
-
-        // // Check every column to see if it's a valid word
-        // for (let x = 0; x < gridX; x++) {
-        //     let colPattern = grid.map(row => row[x]).join('').split('_').at(-1);
-        //     if (colPattern) {
-        //         if (!/[a-z]/.test(colPattern)) {
-        //             continue;
-        //         }
-
-        //         if (colPattern.length === 1) {
-        //             continue;
-        //         }
-
-        //         const exists = await repo.wordExists(colPattern.replace(/\s+$/, '%'), colPattern.length);
-        //         if (!exists) {
-        //             // console.log(`Column ${x} with pattern ${colPattern} does not exist`);
-        //             return false;
-        //         }
-        //     } else {
-        //         //throw new Error("Column is undefined");
-        //     }
-        // }
-
         // Check for duplicated words in rows and columns
         const foundWords = new Set<string>();
         for (let y = 0; y < gridY; y++) {
@@ -148,29 +101,18 @@ export class CrosswordGen {
                 if (charSetMap[`${x},${y}`] === undefined) {
                     const rowCharset = await repo.getCharsetForPrefix(curRowStr || '', Math.min(MAX_WORD_LENGTH - curRowStr!.length, gridX - x));
                     const colCharset = await repo.getCharsetForPrefix(curColStr || '', Math.min(MAX_WORD_LENGTH - curColStr!.length, gridY - y));
-                    // if (y == gridY - 1) {
-                    //     charSetMap[`${x},${y}`] = Array.from(rowCharset).join('');
-                    // } else if (x == gridX - 1) {
-                    //     charSetMap[`${x},${y}`] = Array.from(colCharset).join('');
-                    // } else {
+
                     // Get the intersection of the two sets
                     let chars = Array.from(rowCharset.intersection(colCharset)).join('');
                     if (curRowStr!.length == MAX_WORD_LENGTH || curColStr!.length == MAX_WORD_LENGTH) {
                         chars = "_";
                     }
                     charSetMap[`${x},${y}`] = chars;
-                    // }
-
                 }
                 let charSet = charSetMap[`${x},${y}`];
 
 
                 if (!charSet || charSet.length === 0) {
-                    // for (let row of grid) {
-                    //     console.log("Dead end:");
-                    //     console.log('\t' + row.join(''));
-                    // }
-                    // console.log('---');
                     delete charSetMap[`${x},${y}`];
                     grid[y]![x] = ' ';
                     x -= 2;
@@ -188,7 +130,6 @@ export class CrosswordGen {
                 charSet = charSet!.replace(randomChar, ''); // Remove this char from possible choices
                 charSetMap[`${x},${y}`] = charSet;
                 if (!(await this.validGrid(grid, repo))) {
-                    // await this.validGrid(grid, repo);
                     x--; // Retry this position
                 } else {
                     if (printProgress) {

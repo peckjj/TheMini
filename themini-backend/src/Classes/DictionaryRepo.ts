@@ -2,6 +2,7 @@ import type { IDictionaryRepo } from "../Interfaces/IDictionaryRepo.ts";
 import { CWDataError } from "../../../Crossword/dist/Errors/CWDataError.js";
 import { CWUnreachableError } from "../../../Crossword/dist/Errors/CWUnreachableError.js";
 import pkg, { Database as DatabaseType } from 'sqlite3';
+import * as crypto from 'node:crypto';
 const { Database } = pkg;
 import path from "path";
 
@@ -13,6 +14,19 @@ export class DictionaryRepo implements IDictionaryRepo {
 
     constructor(dbPath: string, isAbsolute = false) {
         this.dbPath = isAbsolute ? dbPath : path.resolve(__dirname, dbPath);
+    }
+
+    private async getWord(word: string): Promise<{ id: number; text: string } | null> {
+        const db = await this.getDbConnection();
+        return new Promise((resolve, reject) => {
+            db.get('SELECT * FROM "words" WHERE "word" = ?', [word], (err, row) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(this.isWordRow(row) ? { id: row.id, text: row.word } : null);
+                }
+            });
+        });
     }
 
     private isWordRow(wordRow: unknown): wordRow is { id: number; word: string } {
@@ -230,6 +244,83 @@ export class DictionaryRepo implements IDictionaryRepo {
             });
 
             return ret;
+        } catch (err) {
+            if (err instanceof CWDataError) {
+                throw err;
+            } else {
+                throw new CWDataError('Database error: ' + (err as Error).message);
+            }
+        }
+    }
+
+    async createAndInsertCrossword(grid: string[][], crosswordName: string): Promise<number> {
+        const db = await this.getDbConnection();
+        const self = this;
+        try {
+            return await new Promise<number>((res, rej) => {
+                const gridToString = grid.map(row => row.join('')).join('');
+                const gridHash = crypto.createHash('sha256').update(gridToString).digest('hex');
+
+                db.serialize(() => {
+                    db.run('BEGIN TRANSACTION');
+                    db.run('INSERT INTO crosswords (title, sha256) VALUES (?, ?)', [crosswordName, gridHash], async function (err) {
+                        if (err) {
+                            db.run('ROLLBACK');
+                            rej(err);
+                            return;
+                        }
+                        const crosswordId = this.lastID;
+                        const stmt = db.prepare('INSERT INTO crossword_word (crossword_id, word_id, direction_id, row, col) VALUES (?, ?, (SELECT id FROM direction WHERE name = ?), ?, ?)');
+                        let curRow = 0;
+                        for (let row of grid) {
+                            let col = 0;
+                            for (let word of row.join('').split('_')) {
+                                if (!word) continue;
+                                else if (word.length == 1) {
+                                    col += 2;
+                                    continue;
+                                }
+                                const word_id = (await self.getWord(word))?.id;
+                                if (word_id) {
+                                    stmt.run(crosswordId, word_id, 'across', curRow, col);
+                                    col += word.length + 1;
+                                } else {
+                                    console.warn(`Word not found in database: ${word}`);
+                                    db.run('ROLLBACK');
+                                    rej(new CWDataError(`Word not found in database: ${word}`));
+                                    return;
+                                }
+                            }
+                            curRow++;
+                        }
+
+                        for (let col = 0; col < grid[0]!.length; col++) {
+                            let row = 0;
+                            for (let word of grid.map(row => row[col]).join('').split('_')) {
+                                if (!word) continue;
+                                else if (word.length == 1) {
+                                    row += 2;
+                                    continue;
+                                }
+                                const word_id = (await self.getWord(word))?.id;
+                                if (word_id) {
+                                    stmt.run(crosswordId, word_id, 'down', row, col);
+                                    row += word.length + 1;
+                                } else {
+                                    console.warn(`Word not found in database: ${word}`);
+                                    db.run('ROLLBACK');
+                                    rej(new CWDataError(`Word not found in database: ${word}`));
+                                    return;
+                                }
+                            }
+                        }
+
+                        stmt.finalize();
+                        db.run('COMMIT');
+                        res(crosswordId);
+                    });
+                });
+            });
         } catch (err) {
             if (err instanceof CWDataError) {
                 throw err;

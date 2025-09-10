@@ -3,9 +3,13 @@ import { DictionaryRepo } from "./Classes/DictionaryRepo.js";
 
 const repo = new DictionaryRepo('./sql/themini.db', false);
 
-const grid = await CrosswordGen.generate(6, 6, 0.33, 60);
-for (let row of grid) {
-    console.log(row.join(' '));
+for (let i = 0; i < 30; i++) {
+    const grid = await CrosswordGen.generate(6, 6, 0.33, 7, false);
+    for (let row of grid) {
+        console.log(row.join(' '));
+    }
+
+    repo.createAndInsertCrossword(grid, `iterative test 6.${i}`);
 }
 
 // import express, { Request, Response, NextFunction } from 'express';
